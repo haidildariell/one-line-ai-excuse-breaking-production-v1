@@ -19,14 +19,31 @@ EXCUSE = (
 )
 
 
-def main() -> None:
-    text = EXCUSE.strip()
-    assert 1 <= len(text) <= 180, f"excuse is {len(text)} chars, must be 1-180"
-    assert "\n" not in text, "excuse must be a single line"
-    out_dir = os.environ.get("OUTPUT_DIR", "/output")
+def validate(text: str) -> str:
+    """One line, 1-180 UTF-8 characters, not whitespace only."""
+    line = text.strip()
+    if not 1 <= len(line) <= 180:
+        raise ValueError(f"excuse is {len(line)} chars, must be 1-180")
+    if "\n" in line or "\r" in line:
+        raise ValueError("excuse must be a single line")
+    if not line.strip():
+        raise ValueError("excuse must not be whitespace only")
+    return line
+
+
+def write_entry(text: str, out_dir: str) -> str:
+    """Write the validated excuse to <out_dir>/entry.txt, return its path."""
     os.makedirs(out_dir, exist_ok=True)
-    with open(os.path.join(out_dir, "entry.txt"), "w", encoding="utf-8") as f:
+    path = os.path.join(out_dir, "entry.txt")
+    with open(path, "w", encoding="utf-8") as f:
         f.write(text)
+    return path
+
+
+def main() -> None:
+    text = validate(EXCUSE)
+    out_dir = os.environ.get("OUTPUT_DIR", "/output")
+    write_entry(text, out_dir)
 
 
 if __name__ == "__main__":
